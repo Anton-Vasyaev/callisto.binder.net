@@ -4,8 +4,12 @@ using System.Text;
 
 namespace Callisto.Binder.Net
 {
-	interface ILoadedLibrary : IDisposable
+	public interface ILoadedLibrary : IDisposable
 	{
+		string Path { get; }
+
+		bool IsDisposed { get; }
+
 		IntPtr GetFunctionAdress(string functionName);
 	}
 }

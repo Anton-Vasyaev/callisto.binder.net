@@ -6,6 +6,8 @@ namespace Callisto.Binder.Net.Windows
 {
 	public static class Kernel32Wrapper
 	{
+		#region Helper
+
 		public static class Bindings
 		{
 			[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
@@ -13,9 +15,15 @@ namespace Callisto.Binder.Net.Windows
 				[MarshalAs(UnmanagedType.LPStr)]string lpFileName
 			);
 
+			[DllImport("kernel32.dll", SetLastError = true)]
+			[return: MarshalAs(UnmanagedType.Bool)]
+			public static extern bool FreeLibrary(IntPtr hModule);
+
 			[DllImport("kernel32.dll", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
 			public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 		}
+
+		#endregion
 
 		public static IntPtr LoadLibrary(string libPath)
 		{
@@ -28,6 +36,15 @@ namespace Callisto.Binder.Net.Windows
 				throw new Exception($"Cannot load Win32 DLL:{libPath}, last error code:{lastError}");
 			}
 			return moduleHandle;
+		}
+
+		public static void FreeLibrary(IntPtr hModule)
+		{
+			if(!Bindings.FreeLibrary(hModule))
+			{
+				var lastError = Marshal.GetLastWin32Error();
+				throw new Exception($"Cannot free win32 lib, last error code:{lastError}");
+			}
 		}
 
 		public static IntPtr GetProcAdress(IntPtr libHandle, string procName)

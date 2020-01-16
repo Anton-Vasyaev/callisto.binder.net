@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Callisto.Binder.Net.Data
+namespace Callisto.Binder.Net
 {
-	enum RTLD
+	public enum RTLD
 	{
 		LAZY			= 0x00001,	/* Lazy function call binding.  */
 		NOW				= 0x00002,	/* Immediate function call binding.  */

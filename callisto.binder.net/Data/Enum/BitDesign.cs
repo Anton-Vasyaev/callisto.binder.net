@@ -4,9 +4,10 @@ using System.Text;
 
 namespace Callisto.Binder.Net
 {
-	enum BitDesign
+	public enum BitDesign
 	{
 		x32,
-		x64
-	};
+		x64,
+		None
+	}
 }

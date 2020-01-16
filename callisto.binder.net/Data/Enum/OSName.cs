@@ -4,9 +4,11 @@ using System.Text;
 
 namespace Callisto.Binder.Net
 {
-	enum OSName
+	public enum OSName
 	{
 		Windows,
-		Linux
+		Unix,
+		OSX,
+		None
 	}
 }

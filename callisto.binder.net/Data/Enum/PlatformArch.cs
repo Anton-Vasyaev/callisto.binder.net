@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Callisto.Binder.Net.Windows
+namespace Callisto.Binder.Net
 {
-	class CppBinder
+	public enum PlatformArch
 	{
+		x86,
+		ARM,
+		None,
 	}
 }

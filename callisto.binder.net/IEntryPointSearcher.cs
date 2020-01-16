@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Callisto.Binder.Net
 {
-	interface IEntryPointSearcher
+	public interface IEntryPointSearcher
 	{
 		IReadOnlyList<FunctionEntryName> EnumerateEntryPoints(string dllPath);
 	}

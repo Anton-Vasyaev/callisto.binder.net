@@ -9,4 +9,11 @@
     <ProjectReference Include="..\callisto.binder.net\callisto.binder.net.csproj" />
   </ItemGroup>
 
+  <Target Name="WinPostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
+    <Exec Command="$(ProjectDir)postbuild.cmd $(SolutionDir) $(ProjectDir)$(OutDir)" />
+  </Target>
+  <Target Name="LinuxPostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Linux'">
+    <Exec Command="echo linux " />
+  </Target>
+  
 </Project>

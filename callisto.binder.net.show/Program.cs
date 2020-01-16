@@ -1,26 +1,26 @@
-﻿using Callisto.Binder.Net.Windows;
-using System;
+﻿using System;
+using System.Linq;
+using System.Reflection;
 
 namespace callisto.binder.net.show
 {
 	class Program
 	{
+
+		static void ShowTypeEnumerate(Type type)
+		{
+			var field = type.GetFields().Where(x => x.Name == "LibraryPack").Single();
+
+			Console.WriteLine($"Name:{field.Name}");
+			Console.WriteLine($"Flags:");
+			type = field.DeclaringType;
+			Console.WriteLine($"Type:{type}");
+			Console.WriteLine($"Member type:{field.MemberType}");
+		}
+
 		static void Main(string[] args)
 		{
-			var dllPath = "C:\\Users\\User\\Desktop\\dll\\nvinfer.dll";
-
-			var entrySearcher = new WinEntryPointSearcher();
-
-			var entries = entrySearcher.EnumerateEntryPoints(dllPath);
-
-			var library = new WinLoadedLibrary(dllPath);
-
-			foreach(var entry in entries)
-			{
-				Console.WriteLine($"Mangled:{entry.MangledName}");
-				Console.WriteLine($"Signature:{entry.DemangledSignature}");
-				Console.WriteLine($"Name:{entry.DemangledName}\n");
-			}
+			ShowTypeEnumerate(typeof(NativeExampleLib));
 		}
 	}
 }

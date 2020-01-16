@@ -11,24 +11,50 @@ namespace Callisto.Binder.Net.Windows
 
 		public IntPtr Handle { get; }
 
-		public string LibPath { get; }
+		public string Path { get; }
+
+		public bool IsDisposed { get; private set; }
 
 		#endregion
 
+		#region Data
+
 		public bool disposed = true;
 
+		#endregion
+
+		#region ConstructAndDestruct
 
 		public WinLoadedLibrary(string libPath)
 		{
 			Verify.IsNotNullOrEmpty(libPath, nameof(libPath));
 			Handle = Kernel32Wrapper.LoadLibrary(libPath);
-			LibPath = libPath;
+			Path = libPath;
+		}
+
+		~WinLoadedLibrary()
+		{
+			Dispose(false);
 		}
 
 		public void Dispose()
 		{
-			throw new NotImplementedException();
+			Dispose(true);
 		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if(!IsDisposed)
+			{
+				Kernel32Wrapper.FreeLibrary(Handle);
+
+				IsDisposed = true;
+			}
+		}
+
+		#endregion
+
+		#region Methods
 
 		public IntPtr GetFunctionAdress(string functionName)
 		{
@@ -41,11 +67,12 @@ namespace Callisto.Binder.Net.Windows
 			{
 				var lastError = Marshal.GetLastWin32Error();
 				throw new Exception(
-					$"Not loaded func '{functionName}' from lib '{LibPath}', last error code:{lastError}"
+					$"Not loaded func '{functionName}' from lib '{Path}', last error code:{lastError}"
 				);
 			}
 			return funcPointer;
 		}
 
+		#endregion
 	}
 }
