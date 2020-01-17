@@ -43,7 +43,7 @@ namespace Callisto.Binder.Net.Windows
 			if(!Bindings.FreeLibrary(hModule))
 			{
 				var lastError = Marshal.GetLastWin32Error();
-				throw new Exception($"Cannot free win32 lib, last error code:{lastError}");
+				throw new Exception($"Cannot free Win32 lib, last error code:{lastError}");
 			}
 		}
 

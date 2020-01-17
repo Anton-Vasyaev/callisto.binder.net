@@ -12,13 +12,23 @@ namespace Callisto.Binder.Net
 {
 	public static class WrapperInitializer
 	{
-		#region Helper
+        #region Data
 
-		#endregion
+        private static List<string> _reservedInstances = new List<string>()
+        {
+            "_libraryPack"
+        };
 
-		#region Methods
+        private static List<string> _reservedNestedTypes = new List<string>()
+        {
+            "Signatures"
+        };
 
-		private static LibraryPack Load(
+        #endregion
+
+        #region Methods
+
+        private static LibraryPack Load(
 			IEnumerable<WinLibRecord> winLibs,
 			IEnumerable<UnixLibRecord> unixLibs
 		)
@@ -53,10 +63,6 @@ namespace Callisto.Binder.Net
 				}
 				else
 				{
-					if (unixLibs == null)
-					{
-						throw new Exception("Not find native libraries for Unix");
-					}
 					throw new NotImplementedException(
 						$"Not implement loading for os '{osName}");
 				}
@@ -70,6 +76,19 @@ namespace Callisto.Binder.Net
 			return libraryPack;
 		}
 
+
+        /// <summary>
+        /// Bind entry points from native library for static delegates of class 'Type'
+        /// </summary>
+        /// <param name="type">
+        /// Type of static class, representation native lib or C++ scope.
+        /// </param>
+        /// <param name="parentTypes">
+        /// enumeration of parent types of this C++ scope like "parent1::parent2::type",
+        /// if parentTypes == null, this type evaluated as native lib (no scope)
+        /// </param>
+        /// <param name="loadedLibrary">loaded library, from which taken entry points</param>
+        /// <param name="entryPoints">enumeration of demangled entry points</param>
 		public static void BindMethods(
 			Type type,
 			IEnumerable<Type> parentTypes,
@@ -86,67 +105,176 @@ namespace Callisto.Binder.Net
 					resultParentName += $"{parentType.Name}::";
 				}
 				resultParentName += $"{type.Name}::";
+
+                var newParentTypes = parentTypes.ToList();
+                newParentTypes.Add(type);
+                parentTypes = newParentTypes;
 			}
 			else parentTypes = new List<Type>();
 
-			// initialize delegates
-			foreach(var field in type.GetFields(BindingFlags.Public | BindingFlags.Static))
+            // initialize delegates
+            var delegateFields = type.GetFields(BindingFlags.Public | BindingFlags.Static).Where(
+                x => 
+                (x.FieldType.BaseType == typeof(MulticastDelegate) ||
+                 x.FieldType.BaseType == typeof(Delegate)) 
+            );
+			foreach(var field in delegateFields)
 			{
-				if(field.IsInitOnly)
+				var entryName = $"{resultParentName}{field.FieldType.Name}";
+
+				var findEntryPoints = entryPoints.Where(x => x.DemangledName == entryName);
+				var findEntryPointsLength = findEntryPoints.Count();
+
+				if(findEntryPointsLength >= 2)
 				{
-					var entryName = $"{resultParentName}{field.Name}";
-
-					var findEntryPoints = entryPoints.Where(x => x.DemangledName == entryName);
-					var findEntryPointsLength = findEntryPoints.Count();
-
-					if(findEntryPointsLength >= 2)
+					var stringBuilder = new StringBuilder();
+					stringBuilder.Append("Not implement bind build for situation");
+					stringBuilder.Append(", when find more two entry points with identical names:\n");
+					foreach(var findEntryPoint in findEntryPoints)
 					{
-						var stringBuilder = new StringBuilder();
-						stringBuilder.Append("Not implement bind build for situation");
-						stringBuilder.Append(", when find more two entry points with identical names:\n");
-						foreach(var findEntryPoint in findEntryPoints)
-						{
-							stringBuilder.Append($"{findEntryPoint.DemangledSignature}\n");
-						}
-						throw new NotImplementedException(stringBuilder.ToString());
+						stringBuilder.Append($"{findEntryPoint.DemangledSignature}\n");
 					}
-					else if(findEntryPointsLength == 0)
-					{
-						throw new Exception($"Not find entry point for name:{entryName}");
-					}
-
-					var entryPtr = loadedLibrary.GetFunctionAdress(findEntryPoints.First().DemangledSignature);
-					var method = Marshal.GetDelegateForFunctionPointer(entryPtr, field.FieldType);
-					field.SetValue(null, method);
+					throw new NotImplementedException(stringBuilder.ToString());
 				}
+				else if(findEntryPointsLength == 0)
+				{
+					throw new Exception($"Not find entry point for name:{entryName}");
+				}
+
+				var entryPtr = loadedLibrary.GetFunctionAdress(findEntryPoints.First().MangledName);
+				var method = Marshal.GetDelegateForFunctionPointer(entryPtr, field.FieldType);
+				field.SetValue(null, method);
 			}
 
-			// initialize childrens scope
-			var newParentTypes = parentTypes.ToList();
-			newParentTypes.Add(type);
+            // recursive initializing of nested clasess (types), which is a present C++ scope
+            var nestedClasses = type.GetNestedTypes().Where(x => !_reservedNestedTypes.Contains(x.Name));
 
-			var nestedClasses = type.GetMembers()
-				.Where(	x => x.MemberType == MemberTypes.NestedType &&
-						x.Name != "Signatures");
-
-			foreach (var nestedClass in nestedClasses)
+			foreach (var nestedType in nestedClasses)
 			{
 				BindMethods(
-					nestedClass.DeclaringType,
-					newParentTypes,
+					nestedType,
+					parentTypes,
 					loadedLibrary,
 					entryPoints);
 			}
-		}
 
-		public static void Initialize(
+            // recursive initializing of instances, whose types is a present C++ scope
+            var instanceFields = type.GetFields(BindingFlags.Public | BindingFlags.Static).Where(
+                x => 
+                x.FieldType != typeof(LibraryPack) &&
+                x.FieldType.BaseType != typeof(Delegate) &&
+                x.FieldType.BaseType != typeof(MulticastDelegate) 
+            );
+            foreach (var field in instanceFields)
+            {
+                var scopeOb = field.GetValue(null);
+                if (scopeOb == null) throw new Exception(
+                     $"Instance of scope '{field.FieldType.Name}' in type '{type.Name}' can be null"
+                );
+                BindMethods(
+                    scopeOb,
+                    parentTypes,
+                    loadedLibrary,
+                    entryPoints
+                );
+            }
+        }
+
+        public static void BindMethods(
+            object scopeObject,
+            IEnumerable<Type> parentTypes,
+            ILoadedLibrary loadedLibrary,
+            IEnumerable<FunctionEntryName> entryPoints
+        )
+        {
+            var scopeType = scopeObject.GetType();
+            // concat entry name like "foo::bar::static_class:getBar"
+            var resultParentName = "";
+            if (parentTypes != null)
+            {
+                foreach (var parentType in parentTypes)
+                {
+                    resultParentName += $"{parentType.Name}::";
+                }
+                resultParentName += $"{scopeType.Name}::";
+
+                var newParentTypes = parentTypes.ToList();
+                newParentTypes.Add(scopeType);
+                parentTypes = newParentTypes;
+            }
+            else parentTypes = new List<Type>();
+
+            // initialize delegates
+            var delegateFields = scopeType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(
+                x => 
+                (x.FieldType.BaseType == typeof(MulticastDelegate) ||
+                 x.FieldType.BaseType == typeof(Delegate))
+            );
+            foreach (var field in delegateFields)
+            {
+                var entryName = $"{resultParentName}{field.FieldType.Name}";
+
+                var findEntryPoints = entryPoints.Where(x => x.DemangledName == entryName);
+                var findEntryPointsLength = findEntryPoints.Count();
+
+                if (findEntryPointsLength >= 2)
+                {
+                    var stringBuilder = new StringBuilder();
+                    stringBuilder.Append("Not implement bind build for situation");
+                    stringBuilder.Append(", when find more two entry points with identical names:\n");
+                    foreach (var findEntryPoint in findEntryPoints)
+                    {
+                        stringBuilder.Append($"{findEntryPoint.DemangledSignature}\n");
+                    }
+                    throw new NotImplementedException(stringBuilder.ToString());
+                }
+                else if (findEntryPointsLength == 0)
+                {
+                    throw new Exception($"Not find entry point for name:{entryName}");
+                }
+
+                var entryPtr = loadedLibrary.GetFunctionAdress(findEntryPoints.First().MangledName);
+                var method = Marshal.GetDelegateForFunctionPointer(entryPtr, field.FieldType);
+                field.SetValue(scopeObject, method);
+            }
+
+            // recursive initializing of instances, whose types is a present C++ scope
+            var instanceFields = scopeType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(
+                x => 
+                x.FieldType != typeof(LibraryPack) &&
+                x.FieldType.BaseType != typeof(Delegate) &&
+                x.FieldType.BaseType != typeof(MulticastDelegate) 
+            );
+            foreach (var field in instanceFields)
+            {
+                var scopeOb = field.GetValue(scopeObject);
+                if (scopeOb == null) throw new Exception(
+                     $"Instance of scope '{field.FieldType.Name}' in instance of '{scopeType.Name}' can be null"
+                );
+                BindMethods(
+                    scopeOb,
+                    parentTypes,
+                    loadedLibrary,
+                    entryPoints
+                );
+            }
+        }
+
+
+        public static void Initialize(
 			Type type, 
 			IEnumerable<WinLibRecord> winLibs,
-			IEnumerable<UnixLibRecord> unixLibs,
-			bool mismatchThrow = false
+			IEnumerable<UnixLibRecord> unixLibs
 		)
 		{
-			LibraryPack libraryPack = null;
+            // validation
+            var libraryPackField = type.GetField("_libraryPack", BindingFlags.NonPublic | BindingFlags.Static);
+
+            if (libraryPackField == null || libraryPackField.FieldType != typeof(LibraryPack)) throw new Exception(
+                $"${type} not has static field _libraryPack or type of _libraryPack is not {nameof(LibraryPack)}"
+            );
+
+            LibraryPack libraryPack = null;
 
 			try
 			{
@@ -164,9 +292,7 @@ namespace Callisto.Binder.Net
 					bindingLib,
 					entries);
 
-				var libraryPackField = type.GetFields().Where(x => x.Name == "LibraryPack").Single();
-				libraryPackField.SetValue(null, libraryPack);
-
+                libraryPackField.SetValue(null, libraryPack);
 			}
 			catch(Exception exc)
 			{

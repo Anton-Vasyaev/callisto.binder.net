@@ -6,13 +6,25 @@ using System.Security;
 
 using Callisto.Binder.Net;
 
-namespace callisto.binder.net.show
+namespace Callisto.Binder.Net.Show
 {
-	public static class NativeExampleLib
+    #region Data
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    public struct point3f
+    {
+        public float x;
+        public float y;
+        public float z;
+    }
+
+    #endregion
+
+    public static class NativeExampleLib
 	{
 		#region Data
 
-		public static LibraryPack LibraryPack = null;
+		private static LibraryPack _libraryPack = null;
 
 		#endregion
 
@@ -48,21 +60,20 @@ namespace callisto.binder.net.show
 			// call static constructor
 		}
 
-		#endregion
+        #endregion
 
-		public static class Signatures
+        #region Methods
+
+        public static class Signatures
 		{
 			[SuppressUnmanagedCodeSecurity]
 			[UnmanagedFunctionPointer(CallingConvention.Cdecl, SetLastError = false)]
-			public delegate float native_pow(float value, float pow_value);
+			public delegate float native_mul(float value1, float value2);
 		}
 
-		#region Methods
-
-		public static readonly Signatures.native_pow native_pow;
+		public static Signatures.native_mul NativeMul;
 
 		#endregion
-
 
 		#region ScopeChildrens
 
@@ -70,34 +81,70 @@ namespace callisto.binder.net.show
 
 		public static class NativeWrap
 		{
-			public static class Signatures
+            #region Methods
+
+            public static class Signatures
 			{
+                [SuppressUnmanagedCodeSecurity]
+                [UnmanagedFunctionPointer(CallingConvention.Cdecl, SetLastError = false)]
+                public delegate float native_pow(float value, int pow_value);
+            }
 
-			}
+            public static Signatures.native_pow NativePow;
 
-			#region Methods
+            #endregion
 
-			#endregion
+            #region ScopeChildrens
 
-			#region NativeClass
+            #region NativeClass
 
-			public static class NativeClass
+            public static class NativeClass
 			{
-				public static class Signatures
+                #region Methods
+
+                public static class Signatures
 				{
+                    [SuppressUnmanagedCodeSecurity]
+                    [UnmanagedFunctionPointer(CallingConvention.Cdecl, SetLastError = false)]
+                    public delegate void copy_bytes(IntPtr src, IntPtr dst, IntPtr size);
+                }
 
-				}
+                public static Signatures.copy_bytes CopyBytes;
 
-				#region Methods
+                #endregion
 
-				#endregion
-			}
+                #region ScopeChildrens
 
-			#endregion
-		}
+                #region Point3fClass
 
-		#endregion
+                public static class Point3fClass
+                {
+                    #region Methods
 
-		#endregion
-	}
+                    public static class Signatures
+                    {
+                        [SuppressUnmanagedCodeSecurity]
+                        [UnmanagedFunctionPointer(CallingConvention.Cdecl, SetLastError = false)]
+                        public delegate point3f construct_point3f(float x, float y, float z);
+                    }
+
+                    public static Signatures.construct_point3f ConstructPoint3f;
+
+                    #endregion
+                }
+
+                #endregion
+
+                #endregion
+            }
+
+            #endregion
+
+            #endregion
+        }
+
+        #endregion
+
+        #endregion
+    }
 }
