@@ -71,7 +71,7 @@ namespace Callisto.Binder.Net.Show
 			public delegate float native_mul(float value1, float value2);
 		}
 
-		public static Signatures.native_mul NativeMul;
+		public static Signatures.native_mul NativeMul { get; private set; }
 
 		#endregion
 
@@ -90,7 +90,7 @@ namespace Callisto.Binder.Net.Show
                 public delegate float native_pow(float value, int pow_value);
             }
 
-            public static Signatures.native_pow NativePow;
+            public static Signatures.native_pow NativePow { get; private set; }
 
             #endregion
 
@@ -109,7 +109,7 @@ namespace Callisto.Binder.Net.Show
                     public delegate void copy_bytes(IntPtr src, IntPtr dst, IntPtr size);
                 }
 
-                public static Signatures.copy_bytes CopyBytes;
+                public static Signatures.copy_bytes CopyBytes { get; private set; }
 
                 #endregion
 
@@ -128,7 +128,7 @@ namespace Callisto.Binder.Net.Show
                         public delegate point3f construct_point3f(float x, float y, float z);
                     }
 
-                    public static Signatures.construct_point3f ConstructPoint3f;
+                    public static Signatures.construct_point3f ConstructPoint3f { get; private set; }
 
                     #endregion
                 }

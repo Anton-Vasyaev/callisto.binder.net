@@ -15,22 +15,13 @@ namespace Callisto.Binder.Net.Show
             public delegate void copy_bytes(IntPtr src, IntPtr dst, IntPtr size);
         }
 
-        public Signatures.copy_bytes CopyBytes;
+        public Signatures.copy_bytes CopyBytes { get; private set; }
 
         #endregion
 
         #region Data
 
-        public Point3fClass Point3fClass;
-
-        #endregion
-
-        #region .ctor
-
-        public NativeClass()
-        {
-            Point3fClass = new Point3fClass();
-        }
+        public Point3fClass Point3fClass { get; private set; }
 
         #endregion
     }

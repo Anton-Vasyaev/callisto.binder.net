@@ -14,15 +14,10 @@ namespace Callisto.Binder.Net.Show
             public delegate float native_pow(float value, int pow_value);
         }
 
-        public Signatures.native_pow NativePow;
+        public Signatures.native_pow NativePow { get; private set; }
 
         #endregion
 
-        public NativeClass NativeClass;
-
-        public NativeWrap()
-        {
-            NativeClass = new NativeClass();
-        }
+        public NativeClass NativeClass { get; private set; }
     }
 }

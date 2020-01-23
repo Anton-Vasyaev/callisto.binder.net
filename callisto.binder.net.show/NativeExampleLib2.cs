@@ -23,13 +23,13 @@ namespace Callisto.Binder.Net.Show
             public delegate float native_mul(float value1, float value2);
         }
 
-        public static Signatures.native_mul NativeMul;
+        public static Signatures.native_mul NativeMul { get; private set; }
 
         #endregion
 
         #region Data
 
-        public static NativeWrap NativeWrap;
+        public static NativeWrap NativeWrap { get; private set; }
 
         #endregion
 
@@ -37,8 +37,6 @@ namespace Callisto.Binder.Net.Show
 
         static NativeExampleLib2()
         {
-            NativeWrap = new NativeWrap();
-
             string assemblyLocation = Assembly.GetExecutingAssembly().Location;
             string dllPath = assemblyLocation != null ? Path.GetDirectoryName(assemblyLocation) : Environment.CurrentDirectory;
 

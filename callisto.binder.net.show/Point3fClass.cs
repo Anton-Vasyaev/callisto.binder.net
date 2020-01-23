@@ -14,7 +14,7 @@ namespace Callisto.Binder.Net.Show
             public delegate point3f construct_point3f(float x, float y, float z);
         }
 
-        public Signatures.construct_point3f ConstructPoint3f;
+        public Signatures.construct_point3f ConstructPoint3f { get; private set; }
 
         #endregion
     }

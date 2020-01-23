@@ -113,14 +113,14 @@ namespace Callisto.Binder.Net
 			else parentTypes = new List<Type>();
 
             // initialize delegates
-            var delegateFields = type.GetFields(BindingFlags.Public | BindingFlags.Static).Where(
+            var delegates = type.GetProperties(BindingFlags.Public | BindingFlags.Static).Where(
                 x => 
-                (x.FieldType.BaseType == typeof(MulticastDelegate) ||
-                 x.FieldType.BaseType == typeof(Delegate)) 
+                (x.PropertyType.BaseType == typeof(MulticastDelegate) ||
+                 x.PropertyType.BaseType == typeof(Delegate)) 
             );
-			foreach(var field in delegateFields)
+			foreach(var delegateProp in delegates)
 			{
-				var entryName = $"{resultParentName}{field.FieldType.Name}";
+				var entryName = $"{resultParentName}{delegateProp.PropertyType.Name}";
 
 				var findEntryPoints = entryPoints.Where(x => x.DemangledName == entryName);
 				var findEntryPointsLength = findEntryPoints.Count();
@@ -142,8 +142,8 @@ namespace Callisto.Binder.Net
 				}
 
 				var entryPtr = loadedLibrary.GetFunctionAdress(findEntryPoints.First().MangledName);
-				var method = Marshal.GetDelegateForFunctionPointer(entryPtr, field.FieldType);
-				field.SetValue(null, method);
+				var method = Marshal.GetDelegateForFunctionPointer(entryPtr, delegateProp.PropertyType);
+				delegateProp.SetValue(null, method);
 			}
 
             // recursive initializing of nested clasess (types), which is a present C++ scope
@@ -205,14 +205,14 @@ namespace Callisto.Binder.Net
             else parentTypes = new List<Type>();
 
             // initialize delegates
-            var delegateFields = scopeType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(
+            var delegateProps = scopeType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(
                 x => 
-                (x.FieldType.BaseType == typeof(MulticastDelegate) ||
-                 x.FieldType.BaseType == typeof(Delegate))
+                (x.PropertyType.BaseType == typeof(MulticastDelegate) ||
+                 x.PropertyType.BaseType == typeof(Delegate))
             );
-            foreach (var field in delegateFields)
+            foreach (var delegateProp in delegateProps)
             {
-                var entryName = $"{resultParentName}{field.FieldType.Name}";
+                var entryName = $"{resultParentName}{delegateProp.PropertyType.Name}";
 
                 var findEntryPoints = entryPoints.Where(x => x.DemangledName == entryName);
                 var findEntryPointsLength = findEntryPoints.Count();
@@ -234,18 +234,18 @@ namespace Callisto.Binder.Net
                 }
 
                 var entryPtr = loadedLibrary.GetFunctionAdress(findEntryPoints.First().MangledName);
-                var method = Marshal.GetDelegateForFunctionPointer(entryPtr, field.FieldType);
-                field.SetValue(scopeObject, method);
+                var method = Marshal.GetDelegateForFunctionPointer(entryPtr, delegateProp.PropertyType);
+                delegateProp.SetValue(scopeObject, method);
             }
 
             // recursive initializing of instances, whose types is a present C++ scope
-            var instanceFields = scopeType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(
+            var instanceProperties = scopeType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(
                 x => 
-                x.FieldType != typeof(LibraryPack) &&
-                x.FieldType.BaseType != typeof(Delegate) &&
-                x.FieldType.BaseType != typeof(MulticastDelegate) 
+                x.PropertyType != typeof(LibraryPack) &&
+                x.PropertyType.BaseType != typeof(Delegate) &&
+                x.PropertyType.BaseType != typeof(MulticastDelegate) 
             );
-            foreach (var field in instanceFields)
+            foreach (var instanceProperty in instanceProperties)
             {
                 var scopeOb = field.GetValue(scopeObject);
                 if (scopeOb == null) throw new Exception(
