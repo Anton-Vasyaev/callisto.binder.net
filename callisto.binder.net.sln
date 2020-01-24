@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "callisto.binder.net", "call
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "callisto.binder.net.cppshow", "callisto.binder.net.show\callisto.binder.net.cppshow.csproj", "{AC60E459-65F7-49CF-9D2E-BEA43BD75C3C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "callisto.binder.net.cshow", "callisto.binder.net.cshow\callisto.binder.net.cshow.csproj", "{C903148C-6F59-4A5A-9C7C-71919B5A4F25}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{AC60E459-65F7-49CF-9D2E-BEA43BD75C3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC60E459-65F7-49CF-9D2E-BEA43BD75C3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC60E459-65F7-49CF-9D2E-BEA43BD75C3C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C903148C-6F59-4A5A-9C7C-71919B5A4F25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C903148C-6F59-4A5A-9C7C-71919B5A4F25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C903148C-6F59-4A5A-9C7C-71919B5A4F25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C903148C-6F59-4A5A-9C7C-71919B5A4F25}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

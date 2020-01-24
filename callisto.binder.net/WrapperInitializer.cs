@@ -76,19 +76,20 @@ namespace Callisto.Binder.Net
 			return libraryPack;
 		}
 
+		#region InitializeCppScopes
 
-        /// <summary>
-        /// Bind entry points from native library for static delegates of class 'Type'
-        /// </summary>
-        /// <param name="type">
-        /// Type of static class, representation native lib or C++ scope.
-        /// </param>
-        /// <param name="parentTypes">
-        /// enumeration of parent types of this C++ scope like "parent1::parent2::type",
-        /// if parentTypes == null, this type evaluated as native lib (no scope)
-        /// </param>
-        /// <param name="loadedLibrary">loaded library, from which taken entry points</param>
-        /// <param name="entryPoints">enumeration of demangled entry points</param>
+		/// <summary>
+		/// Bind entry points from native library for static delegates of class 'Type'
+		/// </summary>
+		/// <param name="type">
+		/// Type of static class, representation native lib or C++ scope.
+		/// </param>
+		/// <param name="parentTypes">
+		/// enumeration of parent types of this C++ scope like "parent1::parent2::type",
+		/// if parentTypes == null, this type evaluated as native lib (no scope)
+		/// </param>
+		/// <param name="loadedLibrary">loaded library, from which taken entry points</param>
+		/// <param name="entryPoints">enumeration of demangled entry points</param>
 		public static void BindMethodsWithScope(
 			Type type,
 			IEnumerable<Type> parentTypes,
@@ -315,6 +316,154 @@ namespace Callisto.Binder.Net
 
 		}
 
-		#endregion
-	}
+        #endregion
+
+        #region InitializeC
+
+        /// <summary>
+        /// Bind entry points from native library for static delegates of class 'Type' and
+        /// he's instances
+        /// </summary>
+        /// <param name="type">
+        /// Type of static class
+        /// </param>
+        /// <param name="loadedLibrary">loaded library, from which taken entry points</param>
+        public static void BindMethods(
+            Type type,
+            ILoadedLibrary loadedLibrary
+        )
+        {
+            // initialize delegates
+            var delegates = type.GetProperties(BindingFlags.Public | BindingFlags.Static).Where(
+                x =>
+                (x.PropertyType.BaseType == typeof(MulticastDelegate) ||
+                 x.PropertyType.BaseType == typeof(Delegate))
+            );
+            foreach (var delegateProp in delegates)
+            {
+                var entryName = delegateProp.PropertyType.Name;
+
+                var entryPtr = loadedLibrary.GetFunctionAdress(entryName);
+                var method = Marshal.GetDelegateForFunctionPointer(entryPtr, delegateProp.PropertyType);
+                delegateProp.SetValue(null, method);
+            }
+
+            // recursive initializing of nested clasess (types), which is a present C++ scope
+            var nestedClasses = type.GetNestedTypes().Where(x => !_reservedNestedTypes.Contains(x.Name));
+
+            foreach (var nestedType in nestedClasses) BindMethods(nestedType, loadedLibrary);
+
+            // recursive initializing of instances, whose types is a present C++ scope
+            var instanceProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Static).Where(
+                x =>
+                x.PropertyType != typeof(LibraryPack) &&
+                x.PropertyType.BaseType != typeof(Delegate) &&
+                x.PropertyType.BaseType != typeof(MulticastDelegate)
+            );
+            foreach (var instanceProperty in instanceProperties)
+            {
+                var scopeOb = Activator.CreateInstance(instanceProperty.PropertyType);
+                instanceProperty.SetValue(null, scopeOb);
+                BindMethods(
+                    scopeOb,
+                    loadedLibrary
+                );
+            }
+        }
+
+        public static void BindMethods(
+            object scopeObject,
+            ILoadedLibrary loadedLibrary
+        )
+        {
+            var scopeType = scopeObject.GetType();
+
+            // initialize delegates
+            var delegateProps = scopeType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(
+                x =>
+                (x.PropertyType.BaseType == typeof(MulticastDelegate) ||
+                 x.PropertyType.BaseType == typeof(Delegate))
+            );
+            foreach (var delegateProp in delegateProps)
+            {
+                var entryName = delegateProp.PropertyType.Name;
+                var entryPtr = loadedLibrary.GetFunctionAdress(entryName);
+                var method = Marshal.GetDelegateForFunctionPointer(entryPtr, delegateProp.PropertyType);
+                delegateProp.SetValue(scopeObject, method);
+            }
+
+            // recursive initializing of instances, whose types is a present C++ scope
+            var instanceProperties = scopeType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(
+                x =>
+                x.PropertyType != typeof(LibraryPack) &&
+                x.PropertyType.BaseType != typeof(Delegate) &&
+                x.PropertyType.BaseType != typeof(MulticastDelegate)
+            );
+            foreach (var instanceProperty in instanceProperties)
+            {
+                var scopeOb = Activator.CreateInstance(instanceProperty.PropertyType);
+                instanceProperty.SetValue(scopeObject, scopeOb);
+                BindMethods(
+                    scopeOb,
+                    loadedLibrary
+                );
+            }
+        }
+
+        /// <summary>
+        /// Initialize Type's, delegates and nested classes entry points from
+        /// dynamic libs (so, dll) with extern "C" names without mangling
+        /// </summary>
+        /// <param name="type">
+        /// Type of static class
+        /// </param>
+        /// <param name="winLibs">
+        /// list of windows pathes to dynamic libs, who need loading before working logic of Type
+        /// will start to work. order of dynamic libs loading determined by order of in pathe's list.
+        /// </param>
+        /// <param name="unixLibs">
+        /// list of unix (include linux) pathes to dynamic libs, who need loading before working logic of Type
+        /// will start to work. Order of dynamic libs loading determined by order of in pathes list.
+        /// </param>
+        public static void Initialize(
+            Type type,
+            IEnumerable<WinLibRecord> winLibs,
+            IEnumerable<UnixLibRecord> unixLibs
+        )
+        {
+            // validation
+            var libraryPackField = type.GetField("_libraryPack", BindingFlags.NonPublic | BindingFlags.Static);
+
+            if (libraryPackField == null || libraryPackField.FieldType != typeof(LibraryPack)) throw new Exception(
+                $"${type} not has static field _libraryPack or type of _libraryPack is not {nameof(LibraryPack)}"
+            );
+
+            LibraryPack libraryPack = null;
+
+            try
+            {
+                libraryPack = Load(winLibs, unixLibs);
+
+                var (osName, arch, bitDesing) = EnvironmentAuxiliary.GetEnvironment();
+                var bindingLib = libraryPack.LoadedLibraries.Last();
+
+                BindMethods(
+                    type,
+                    bindingLib
+                );
+
+                libraryPackField.SetValue(null, libraryPack);
+            }
+            catch (Exception exc)
+            {
+                libraryPack?.Dispose();
+                throw exc;
+            }
+
+        }
+
+        #endregion
+
+        #endregion
+    }
 }

@@ -4,6 +4,9 @@
 #include <lib_export.h>
 #include <types.h>
 
+#include "NativeClassNested/FuncsPoint3fClass.h"
+
+
 extern "C" CALLISTO_EXPORT void CALLISTO_CALL 
 NativeWrap_NativeClass_copyBytes(
     t_byte* src,
