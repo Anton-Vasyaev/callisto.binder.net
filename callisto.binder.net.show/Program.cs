@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-namespace Callisto.Binder.Net.Show
+namespace Callisto.Binder.Net.CppShow
 {
 	class Program
 	{

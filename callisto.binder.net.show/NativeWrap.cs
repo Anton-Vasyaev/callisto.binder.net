@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Security;
 
-namespace Callisto.Binder.Net.Show
+namespace Callisto.Binder.Net.CppShow
 {
     public class NativeWrap
     {

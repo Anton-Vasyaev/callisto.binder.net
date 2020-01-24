@@ -1,7 +1,7 @@
 ﻿using System.Security;
 using System.Runtime.InteropServices;
 
-namespace Callisto.Binder.Net.Show
+namespace Callisto.Binder.Net.CppShow
 {
     public class Point3fClass
     {

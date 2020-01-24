@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29326.143
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "callisto.binder.net", "callisto.binder.net\callisto.binder.net.csproj", "{FB55EEEA-F05B-409E-96A9-A11D49DEBFA9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "callisto.binder.net", "callisto.binder.net\callisto.binder.net.csproj", "{FB55EEEA-F05B-409E-96A9-A11D49DEBFA9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "callisto.binder.net.show", "callisto.binder.net.show\callisto.binder.net.show.csproj", "{AC60E459-65F7-49CF-9D2E-BEA43BD75C3C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "callisto.binder.net.cppshow", "callisto.binder.net.show\callisto.binder.net.cppshow.csproj", "{AC60E459-65F7-49CF-9D2E-BEA43BD75C3C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

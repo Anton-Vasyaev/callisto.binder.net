@@ -6,7 +6,7 @@ using System.Security;
 
 using Callisto.Binder.Net;
 
-namespace Callisto.Binder.Net.Show
+namespace Callisto.Binder.Net.CppShow
 {
     #region Data
 
@@ -43,8 +43,8 @@ namespace Callisto.Binder.Net.Show
 					"nativeexample",
 					new ((PlatformArch, BitDesign), string path)[]
 					{
-						((PlatformArch.x86, BitDesign.x32), Path.Combine(dllPath, "nativeexample_x32.dll")),
-						((PlatformArch.x86, BitDesign.x64), Path.Combine(dllPath, "nativeexample_x64.dll")),
+						((PlatformArch.x86, BitDesign.x32), Path.Combine(dllPath, "native_cpp_example_x32.dll")),
+						((PlatformArch.x86, BitDesign.x64), Path.Combine(dllPath, "native_cpp_example_x64.dll")),
 					})
 			};
 

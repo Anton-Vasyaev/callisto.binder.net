@@ -56,4 +56,4 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${DLL_DIR})
 include_directories(include)
 
 file(GLOB_RECURSE lib_source_list "include/*.hpp" "include/*.h" "src/*.hpp" "src/*.h" "src/*.cpp")
-add_library(nativeexample_${CALLISTO_BIT_DESIGN} SHARED ${lib_source_list})
+add_library(native_cpp_example_${CALLISTO_BIT_DESIGN} SHARED ${lib_source_list})
