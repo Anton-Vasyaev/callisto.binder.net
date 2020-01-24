@@ -5,7 +5,7 @@ namespace Callisto.Binder.Net.Show
 {
     public class Point3fClass
     {
-        #region Methods
+        #region NativeFunction
 
         public static class Signatures
         {

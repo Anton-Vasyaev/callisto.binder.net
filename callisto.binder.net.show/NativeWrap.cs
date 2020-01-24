@@ -5,7 +5,7 @@ namespace Callisto.Binder.Net.Show
 {
     public class NativeWrap
     {
-        #region Methods
+        #region NativeFunctions
 
         public static class Signatures
         {
@@ -16,8 +16,12 @@ namespace Callisto.Binder.Net.Show
 
         public Signatures.native_pow NativePow { get; private set; }
 
-        #endregion
+		#endregion
 
-        public NativeClass NativeClass { get; private set; }
-    }
+		#region Scope
+
+		public NativeClass NativeClass { get; private set; }
+
+		#endregion
+	}
 }

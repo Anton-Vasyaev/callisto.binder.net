@@ -6,7 +6,7 @@ namespace Callisto.Binder.Net.Show
 {
     public class NativeClass
     {
-        #region Methods
+        #region NativeFunctions
 
         public static class Signatures
         {
@@ -19,7 +19,7 @@ namespace Callisto.Binder.Net.Show
 
         #endregion
 
-        #region Data
+        #region Scopes
 
         public Point3fClass Point3fClass { get; private set; }
 

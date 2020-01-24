@@ -89,7 +89,7 @@ namespace Callisto.Binder.Net
         /// </param>
         /// <param name="loadedLibrary">loaded library, from which taken entry points</param>
         /// <param name="entryPoints">enumeration of demangled entry points</param>
-		public static void BindMethods(
+		public static void BindMethodsWithScope(
 			Type type,
 			IEnumerable<Type> parentTypes,
 			ILoadedLibrary loadedLibrary,
@@ -151,7 +151,7 @@ namespace Callisto.Binder.Net
 
 			foreach (var nestedType in nestedClasses)
 			{
-				BindMethods(
+				BindMethodsWithScope(
 					nestedType,
 					parentTypes,
 					loadedLibrary,
@@ -159,19 +159,17 @@ namespace Callisto.Binder.Net
 			}
 
             // recursive initializing of instances, whose types is a present C++ scope
-            var instanceFields = type.GetFields(BindingFlags.Public | BindingFlags.Static).Where(
+            var instanceProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Static).Where(
                 x => 
-                x.FieldType != typeof(LibraryPack) &&
-                x.FieldType.BaseType != typeof(Delegate) &&
-                x.FieldType.BaseType != typeof(MulticastDelegate) 
+                x.PropertyType != typeof(LibraryPack) &&
+                x.PropertyType.BaseType != typeof(Delegate) &&
+                x.PropertyType.BaseType != typeof(MulticastDelegate) 
             );
-            foreach (var field in instanceFields)
+            foreach (var instanceProperty in instanceProperties)
             {
-                var scopeOb = field.GetValue(null);
-                if (scopeOb == null) throw new Exception(
-                     $"Instance of scope '{field.FieldType.Name}' in type '{type.Name}' can be null"
-                );
-                BindMethods(
+                var scopeOb = Activator.CreateInstance(instanceProperty.PropertyType);
+                instanceProperty.SetValue(null, scopeOb);
+                BindMethodsWithScope(
                     scopeOb,
                     parentTypes,
                     loadedLibrary,
@@ -180,7 +178,7 @@ namespace Callisto.Binder.Net
             }
         }
 
-        public static void BindMethods(
+        public static void BindMethodsWithScope(
             object scopeObject,
             IEnumerable<Type> parentTypes,
             ILoadedLibrary loadedLibrary,
@@ -247,11 +245,9 @@ namespace Callisto.Binder.Net
             );
             foreach (var instanceProperty in instanceProperties)
             {
-                var scopeOb = field.GetValue(scopeObject);
-                if (scopeOb == null) throw new Exception(
-                     $"Instance of scope '{field.FieldType.Name}' in instance of '{scopeType.Name}' can be null"
-                );
-                BindMethods(
+                var scopeOb = Activator.CreateInstance(instanceProperty.PropertyType);
+                instanceProperty.SetValue(scopeObject, scopeOb);
+                BindMethodsWithScope(
                     scopeOb,
                     parentTypes,
                     loadedLibrary,
@@ -260,8 +256,25 @@ namespace Callisto.Binder.Net
             }
         }
 
-
-        public static void Initialize(
+        /// <summary>
+        /// Initialize Type's, delegates and nested classes entry points from
+        /// dynamic libs (so, dll), where entry points mangled name contain C++ scope
+        /// (namespaces, classes and others) like 
+        /// nestedClassType::nestedClassType2::entry_function_name.
+        /// </summary>
+        /// <param name="type">
+        /// Top Level Type, who contain scopes in static nested classes (Types) or
+        /// instances, but type not present a C++ scope
+        /// </param>
+        /// <param name="winLibs">
+        /// list of windows pathes to dynamic libs, who need loading before working logic of Type
+        /// will start to work. order of dynamic libs loading determined by order of in pathe's list.
+        /// </param>
+        /// <param name="unixLibs">
+        /// list of unix (include linux) pathes to dynamic libs, who need loading before working logic of Type
+        /// will start to work. Order of dynamic libs loading determined by order of in pathes list.
+        /// </param>
+        public static void InitializeWithScope(
 			Type type, 
 			IEnumerable<WinLibRecord> winLibs,
 			IEnumerable<UnixLibRecord> unixLibs
@@ -286,7 +299,7 @@ namespace Callisto.Binder.Net
 
 				var entries = entryPointSearcher.EnumerateEntryPoints(bindingLib.Path);
 
-				BindMethods(
+				BindMethodsWithScope(
 					type,
 					null,
 					bindingLib,

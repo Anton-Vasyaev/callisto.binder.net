@@ -48,7 +48,7 @@ namespace Callisto.Binder.Net.Show
 					})
 			};
 
-			WrapperInitializer.Initialize(
+			WrapperInitializer.InitializeWithScope(
 				typeof(NativeExampleLib),
 				winLibRecords,
 				null

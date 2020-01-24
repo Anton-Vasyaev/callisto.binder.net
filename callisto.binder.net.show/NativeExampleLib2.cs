@@ -14,7 +14,7 @@ namespace Callisto.Binder.Net.Show
 
         #endregion
 
-        #region Methods
+        #region NativeFunctions
 
         public static class Signatures
         {
@@ -27,7 +27,7 @@ namespace Callisto.Binder.Net.Show
 
         #endregion
 
-        #region Data
+        #region Scopes
 
         public static NativeWrap NativeWrap { get; private set; }
 
@@ -51,7 +51,7 @@ namespace Callisto.Binder.Net.Show
                     })
             };
 
-            WrapperInitializer.Initialize(
+            WrapperInitializer.InitializeWithScope(
                 typeof(NativeExampleLib2),
                 winLibRecords,
                 null

@@ -25,9 +25,9 @@ namespace Callisto.Binder.Net.Show
 		{
             //ShowTypeEnumerate(typeof(NativeWrap));
 
-            Console.WriteLine($"Native mul(2, 5) = {NativeExampleLib2.NativeMul(2.0f, 5.0f)}");
+            Console.WriteLine($"Native mul(2, 5) = {NativeExampleLib.NativeMul(2.0f, 5.0f)}");
 
-            Console.WriteLine($"Native pow(2, 5) = {NativeExampleLib2.NativeWrap.NativePow(2.0f, 5)}");
+            Console.WriteLine($"Native pow(2, 5) = {NativeExampleLib.NativeWrap.NativePow(2.0f, 5)}");
 
             var length = 10;
             var copyLength = 7;
@@ -43,7 +43,7 @@ namespace Callisto.Binder.Net.Show
             fixed(byte* srcPtr = srcBytes)
             fixed(byte* dstPtr = dstBytes)
             {
-                NativeExampleLib2.NativeWrap.NativeClass.CopyBytes(
+                NativeExampleLib.NativeWrap.NativeClass.CopyBytes(
                     (IntPtr)srcPtr,
                     (IntPtr)dstPtr,
                     IntPtr.Add(IntPtr.Zero, copyLength)
@@ -54,7 +54,7 @@ namespace Callisto.Binder.Net.Show
             foreach (var dst in dstBytes) Console.Write($"{dst} ");
             Console.WriteLine();
 
-            var cPoint = NativeExampleLib2.NativeWrap.NativeClass.Point3fClass.ConstructPoint3f(7.4f, 6.3f, 1.2f);
+            var cPoint = NativeExampleLib.NativeWrap.NativeClass.Point3fClass.ConstructPoint3f(7.4f, 6.3f, 1.2f);
             Console.WriteLine($"Native construct point:({cPoint.x}, {cPoint.y}, {cPoint.z})");
 		}
 	}
